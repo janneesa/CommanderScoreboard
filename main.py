@@ -1,24 +1,19 @@
-import os
 from flask import Flask, render_template, request, jsonify
 import mysql.connector
 from flask_cors import CORS
 from datetime import datetime
-import json
 
 app = Flask(__name__)
 
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-tietokanta = {
-    'user': os.getenv('DB_USER'),
-    'password': os.getenv('DB_PASSWORD'),
-    'host': os.getenv('DB_HOST'),
-    'database': os.getenv('DB_NAME'),
-    'raise_on_warnings': True,
-    'autocommit': True
-}
-
+tietokanta = {'user': 'root',
+              'password': 'Bumbaz9',
+              'host': '127.0.0.1',
+              'database': 'mtg_database',
+              'raise_on_warnings': True,
+              'autocommit': True}
 
 def get_db_connection():
     try:
@@ -27,9 +22,6 @@ def get_db_connection():
     except mysql.connector.errors.Error as err:
         print(err)
         return None
-
-
-
 
 @app.route('/')
 def test():
@@ -92,7 +84,6 @@ def get_player_decks(player_name):
     conn.close()
     return jsonify(result)
 
-
 @app.route('/get_all_decks')
 def get_all_decks():
     conn = get_db_connection()
@@ -111,13 +102,11 @@ def get_all_decks():
     conn.close()
     return jsonify(result)
 
-
 @app.route('/create_player/<name>')
 def create_player(name):
     conn = get_db_connection()
     if conn is None:
         return jsonify({"error": "Unable to connect to the database"}), 500
-
     myCursor = conn.cursor(dictionary=True)
     query = "INSERT INTO players (name) VALUES (%s)"
     try:
@@ -128,7 +117,6 @@ def create_player(name):
     finally:
         myCursor.close()
         conn.close()
-
     return jsonify({"message": "ok"})
 
 @app.route('/create_deck/<player_name>/<deck_name>')
@@ -136,7 +124,6 @@ def create_deck(player_name, deck_name):
     conn = get_db_connection()
     if conn is None:
         return jsonify({"error": "Unable to connect to the database"}), 500
-
     myCursor = conn.cursor(dictionary=True)
     query = "INSERT INTO decks (player_name, deck_name) VALUES (%s, %s)"
     try:
@@ -147,7 +134,6 @@ def create_deck(player_name, deck_name):
     finally:
         myCursor.close()
         conn.close()
-
     return jsonify({"message": "ok"})
 
 @app.route('/create_match/<winner_name>/<winner_deck>/<second_name>/<second_deck>/<third_name>/<third_deck>/<fourth_name>/<fourth_deck>/<fifth_name>/<fifth_deck>/<sixth_name>/<sixth_deck>')
@@ -155,9 +141,7 @@ def create_match(winner_name, winner_deck, second_name, second_deck, third_name,
     conn = get_db_connection()
     if conn is None:
         return jsonify({"error": "Unable to connect to the database"}), 500
-
     current_date = datetime.now().date()
-
     myCursor = conn.cursor(dictionary=True)
     query = "INSERT INTO games (winner_name, winner_deck, loser_1, deck_1, loser_2, deck_2, loser_3, deck_3, loser_4, deck_4, loser_5, deck_5, date) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     try:
@@ -168,10 +152,7 @@ def create_match(winner_name, winner_deck, second_name, second_deck, third_name,
     finally:
         myCursor.close()
         conn.close()
-
     return jsonify({"message": "ok"})
-
-
 
 @app.route('/update_winner/<winner_name>/<winner_deck>')
 def update_winner(winner_name, winner_deck):
@@ -187,18 +168,13 @@ def update_winner(winner_name, winner_deck):
             WHERE name = %s
         """
         myCursor.execute(update_players_query, (winner_name,))
-
-        # Update the decks table
         update_decks_query = """
             UPDATE decks
             SET deck_games = deck_games + 1, deck_wins = deck_wins + 1
             WHERE player_name = %s AND deck_name = %s
         """
         myCursor.execute(update_decks_query, (winner_name, winner_deck))
-
-        # Commit the transaction
         conn.commit()
-
     except Exception as e:
         error_message = f"Unexpected Error: {str(e)}"
         print(error_message)  # Log the error for debugging
@@ -206,7 +182,6 @@ def update_winner(winner_name, winner_deck):
     finally:
         myCursor.close()
         conn.close()
-
     return jsonify({"message": "ok"})
 
 @app.route('/update_loser/<loser_name>/<loser_deck>')
@@ -223,18 +198,13 @@ def update_loser(loser_name, loser_deck):
             WHERE name = %s
         """
         myCursor.execute(update_players_query, (loser_name,))
-
-        # Update the decks table
         update_decks_query = """
             UPDATE decks
             SET deck_games = deck_games + 1
             WHERE player_name = %s AND deck_name = %s
         """
         myCursor.execute(update_decks_query, (loser_name, loser_deck))
-
-        # Commit the transaction
         conn.commit()
-
     except Exception as e:
         error_message = f"Unexpected Error: {str(e)}"
         print(error_message)  # Log the error for debugging
@@ -258,7 +228,6 @@ def set_best_decks():
         """
         myCursor.execute(get_players_query)
         players = myCursor.fetchall()
-
         for player in players:
             get_best_deck_query = """
                 SELECT deck_name, deck_games, deck_wins,(deck_wins / NULLIF(deck_games, 0)) * 100 AS winrate
@@ -269,7 +238,6 @@ def set_best_decks():
             """
             myCursor.execute(get_best_deck_query, (player['name'],))
             best_deck = myCursor.fetchone()
-
             if best_deck:
                 update_player_query = """
                     UPDATE players
@@ -277,17 +245,13 @@ def set_best_decks():
                     WHERE name = %s
                 """
                 myCursor.execute(update_player_query, (best_deck['deck_name'], player['name']))
-
         conn.commit()
-
         return jsonify({"message": "ok"}), 200
-
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
-
 
 if __name__ == '__main__':
     app.run()

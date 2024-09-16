@@ -1,276 +1,160 @@
 'use strict';
 
 // Elements
-const main_menu = document.getElementById('main-menu');
-const player_amount = document.getElementById('player-amount');
-const not_main_menu = document.getElementsByClassName('not-main');
-const player_data = document.getElementById('player-data');
-const player_history = document.getElementById('player-history');
-const deck_data = document.getElementById('deck-data');
-const match_history = document.getElementById('match-history');
-const name_modal = document.getElementById('name-modal');
-const player_selector_1 = document.getElementById('player-select-1');
-const deck_selector_1 = document.getElementById('deck-select-1');
-const player_selector_2 = document.getElementById('player-select-2');
-const deck_selector_2 = document.getElementById('deck-select-2');
-const player_selector_3 = document.getElementById('player-select-3');
-const deck_selector_3 = document.getElementById('deck-select-3');
-const player_selector_4 = document.getElementById('player-select-4');
-const deck_selector_4 = document.getElementById('deck-select-4');
-const player_selector_5 = document.getElementById('player-select-5');
-const deck_selector_5 = document.getElementById('deck-select-5');
-const player_selector_6 = document.getElementById('player-select-6');
-const deck_selector_6 = document.getElementById('deck-select-6');
-const connection = document.getElementById('connection');
-
-const WINNER_COLOR = 'limegreen';
-const LOSER_COLOR = 'red';
-let player_names = [];
+const elements = {
+    mainMenu: document.getElementById('main-menu'),
+    playerAmount: document.getElementById('player-amount'),
+    notMainMenu: document.getElementsByClassName('not-main'),
+    playerData: document.getElementById('player-data'),
+    playerHistory: document.getElementById('player-history'),
+    deckData: document.getElementById('deck-data'),
+    matchHistory: document.getElementById('match-history'),
+    nameModal: document.getElementById('name-modal'),
+    connection: document.getElementById('connection'),
+    playerSelectors: Array.from({ length: 6 }, (_, i) => document.getElementById(`player-select-${i + 1}`)),
+    deckSelectors: Array.from({ length: 6 }, (_, i) => document.getElementById(`deck-select-${i + 1}`))
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch(`http://localhost:5000/get_all_players`);
         const result = await response.json();
-        for (let i of result) {
-            player_names.push(i.name);
-        }
+        playerNames = result.map(player => player.name);
 
-        const player_select_dropdown = document.getElementById('player-select');
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_select_dropdown.appendChild(option);
+        const playerSelectDropdown = document.getElementById('player-select');
+        playerNames.forEach(name => {
+            const option = new Option(name, name);
+            playerSelectDropdown.appendChild(option);
+            elements.playerSelectors.forEach(selector => selector.appendChild(option.cloneNode(true)));
         });
 
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_selector_1.appendChild(option);
-        });
-
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_selector_2.appendChild(option);
-        });
-
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_selector_3.appendChild(option);
-        });
-
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_selector_4.appendChild(option);
-        });
-
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_selector_5.appendChild(option);
-        });
-
-        player_names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            player_selector_6.appendChild(option);
-        });
-
-        connection.innerText = "Connected"
-        connection.style.color = "green"
-
+        elements.connection.innerText = "Connected to database!";
+        elements.connection.style.color = "green";
     } catch (error) {
         console.error("Error fetching data: ", error);
-        connection.innerText = "Disconnected"
-        connection.style.color = "red"
+        elements.connection.innerText = "Disconnected from database!";
+        elements.connection.style.color = "red";
     }
 });
 
-function show_create_new_game() {
-    hide_main_menu();
-    player_amount.style.display = "flex";
-    player_amount.style.flexDirection = "column";
+const WINNER_COLOR = 'rgba(50, 205, 50, 0.5)'; // limegreen with 50% opacity
+const LOSER_COLOR = 'rgba(255, 0, 0, 0.5)'; // red with 50% opacity
+let playerNames = [];
+
+function hideAllMenus() {
+    elements.mainMenu.style.display = "none";
+    Array.from(elements.notMainMenu).forEach(el => el.style.display = "none");
 }
 
-async function show_view_game_data() {
-    hide_main_menu();
-    player_data.style.display = 'flex';
+function showCreateNewGame() {
+    hideAllMenus();
+    elements.playerAmount.style.display = "flex";
+    elements.playerAmount.style.flexDirection = "column";
+}
 
-    player_data.scrollTo({ top: 0, behavior: 'smooth' });
+async function showViewGameData() {
+    hideAllMenus();
+    elements.playerData.style.display = 'flex';
+    elements.playerData.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
         const response = await fetch(`http://localhost:5000/get_all_players`);
         const result = await response.json();
-
-        const table_body = document.querySelector('#player-table tbody');
-        table_body.innerHTML = ''; // Clear existing table data
+        const tableBody = document.querySelector('#player-table tbody');
+        tableBody.innerHTML = '';
 
         result.forEach(player => {
             const row = document.createElement('tr');
-
-            const name_cell = document.createElement('td');
-            const name_link = document.createElement('a');
-            name_link.href = "#";
-            name_link.textContent = player.name;
-            name_link.onclick = () => get_player_history(player.name);
-            name_cell.appendChild(name_link);
-            row.appendChild(name_cell);
-
-            const games_cell = document.createElement('td');
-            games_cell.textContent = player.games;
-            row.appendChild(games_cell);
-
-            const wins_cell = document.createElement('td');
-            wins_cell.textContent = player.wins;
-            row.appendChild(wins_cell);
-
-            const winrate_cell = document.createElement('td');
-            winrate_cell.textContent = calculate_win_rate(player.games, player.wins);
-            row.appendChild(winrate_cell);
-
-            const deck_cell = document.createElement('td');
-            deck_cell.textContent = player.best_deck;
-            row.appendChild(deck_cell);
-
-            table_body.appendChild(row);
+            row.innerHTML = `
+                <td><a href="#" onclick="getPlayerHistory('${player.name}')">${player.name}</a></td>
+                <td>${player.games}</td>
+                <td>${player.wins}</td>
+                <td>${calculateWinRate(player.games, player.wins)}</td>
+                <td>${player.best_deck}</td>
+            `;
+            tableBody.appendChild(row);
         });
     } catch (error) {
         console.error("Error fetching data: ", error);
     }
 }
 
-async function get_player_history(player_name) {
-    to_menu();
-    hide_main_menu();
-    player_history.style.display = 'flex';
-
-    player_history.scrollTo({ top: 0, behavior: 'smooth' });
+async function getPlayerHistory(playerName) {
+    hideAllMenus();
+    elements.playerHistory.style.display = 'flex';
+    elements.playerHistory.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
-        const response = await fetch(`http://localhost:5000/get_player_history/${player_name}`);
+        const response = await fetch(`http://localhost:5000/get_player_history/${playerName}`);
         const result = await response.json();
-
-        const history_table_body = document.querySelector('#history-table tbody');
-        history_table_body.innerHTML = '';
+        const historyTableBody = document.querySelector('#history-table tbody');
+        historyTableBody.innerHTML = '';
 
         result.forEach(match => {
             const row = document.createElement('tr');
-
-            const create_player_deck_cell = (name, deck) => {
-                const cell = document.createElement('td');
-                cell.innerHTML = `${name}<br><small>${deck}</small>`;
-                return cell;
-            };
-
-            row.appendChild(create_player_deck_cell(match.winner_name, match.winner_deck));
-
-            for (let i = 1; i <= 5; i++) {
-                row.appendChild(create_player_deck_cell(match[`loser_${i}`] || '', match[`deck_${i}`] || ''));
-            }
-
-            const date_cell = document.createElement('td');
-            date_cell.textContent = match.date;
-            row.appendChild(date_cell);
-
-            row.style.backgroundColor = (match.winner_name === player_name) ? WINNER_COLOR : LOSER_COLOR;
-
-            history_table_body.appendChild(row);
+            row.innerHTML = `
+                <td>${match.winner_name}<br><small>${match.winner_deck}</small></td>
+                ${Array.from({ length: 5 }, (_, i) => `<td>${match[`loser_${i + 1}`] || ''}<br><small>${match[`deck_${i + 1}`] || ''}</small></td>`).join('')}
+                <td>${match.date}</td>
+            `;
+            row.style.backgroundColor = (match.winner_name === playerName) ? WINNER_COLOR : LOSER_COLOR;
+            historyTableBody.appendChild(row);
         });
-
     } catch (error) {
         console.error("Error fetching player history: ", error);
     }
 }
 
-async function show_history() {
-    hide_main_menu();
-    match_history.style.display = 'flex';
-
-    match_history.scrollTo({ top: 0, behavior: 'smooth' });
+async function showHistory() {
+    hideAllMenus();
+    elements.matchHistory.style.display = 'flex';
+    elements.matchHistory.scrollTo({ top: 0, behavior: 'smooth' });
 
     try {
         const response = await fetch(`http://localhost:5000/get_match_history`);
         const result = await response.json();
-
-        const match_history_table_body = document.querySelector('#match-table tbody');
-        match_history_table_body.innerHTML = '';
+        const matchHistoryTableBody = document.querySelector('#match-table tbody');
+        matchHistoryTableBody.innerHTML = '';
 
         result.forEach(match => {
             const row = document.createElement('tr');
-
-            const create_player_deck_cell = (name, deck) => {
-                const cell = document.createElement('td');
-                cell.innerHTML = `${name}<br><small>${deck}</small>`;
-                return cell;
-            };
-
-            row.appendChild(create_player_deck_cell(match.winner_name, match.winner_deck));
-
-            for (let i = 1; i <= 5; i++) {
-                row.appendChild(create_player_deck_cell(match[`loser_${i}`] || '', match[`deck_${i}`] || ''));
-            }
-
-            const date_cell = document.createElement('td');
-            date_cell.textContent = match.date;
-            row.appendChild(date_cell);
-
-            match_history_table_body.appendChild(row);
+            row.innerHTML = `
+                <td>${match.winner_name}<br><small>${match.winner_deck}</small></td>
+                ${Array.from({ length: 5 }, (_, i) => `<td>${match[`loser_${i + 1}`] || ''}<br><small>${match[`deck_${i + 1}`] || ''}</small></td>`).join('')}
+                <td>${match.date}</td>
+            `;
+            matchHistoryTableBody.appendChild(row);
         });
-
     } catch (error) {
         console.error("Error fetching player history: ", error);
     }
 }
 
-async function show_deck_data() {
-    hide_main_menu();
-    deck_data.style.display = 'flex';
-    deck_data.scrollTo({ top: 0, behavior: 'smooth' });
-    await fetch_and_display_decks();
+async function showDeckData() {
+    hideAllMenus();
+    elements.deckData.style.display = 'flex';
+    elements.deckData.scrollTo({ top: 0, behavior: 'smooth' });
+    await fetchAndDisplayDecks();
 }
 
-async function fetch_and_display_decks(player_name = 'all') {
+async function fetchAndDisplayDecks(playerName = 'all') {
     try {
         const response = await fetch(`http://localhost:5000/get_all_decks`);
         const result = await response.json();
-
-        const table_body = document.querySelector('#deck-table tbody');
-        table_body.innerHTML = '';
+        const tableBody = document.querySelector('#deck-table tbody');
+        tableBody.innerHTML = '';
 
         result.forEach(deck => {
-            if (player_name === 'all' || deck.player_name === player_name) {
+            if (playerName === 'all' || deck.player_name === playerName) {
                 const row = document.createElement('tr');
-
-                const deck_cell = document.createElement('td');
-                deck_cell.textContent = deck.deck_name;
-                row.appendChild(deck_cell);
-
-                const creator_cell = document.createElement('td');
-                creator_cell.textContent = deck.player_name;
-                row.appendChild(creator_cell);
-
-                const games_cell = document.createElement('td');
-                games_cell.textContent = deck.deck_games;
-                row.appendChild(games_cell);
-
-                const wins_cell = document.createElement('td');
-                wins_cell.textContent = deck.deck_wins;
-                row.appendChild(wins_cell);
-
-                const winrate_cell = document.createElement('td');
-                winrate_cell.textContent = calculate_win_rate(deck.deck_games, deck.deck_wins);
-                row.appendChild(winrate_cell);
-
-                table_body.appendChild(row);
+                row.innerHTML = `
+                    <td>${deck.deck_name}</td>
+                    <td>${deck.player_name}</td>
+                    <td>${deck.deck_games}</td>
+                    <td>${deck.deck_wins}</td>
+                    <td>${calculateWinRate(deck.deck_games, deck.deck_wins)}</td>
+                `;
+                tableBody.appendChild(row);
             }
         });
     } catch (error) {
@@ -278,79 +162,69 @@ async function fetch_and_display_decks(player_name = 'all') {
     }
 }
 
-function filter_decks_by_player() {
-    const player_select = document.getElementById('player-select');
-    const selected_player = player_select.value;
-    fetch_and_display_decks(selected_player);
+function filterDecksByPlayer() {
+    const selectedPlayer = document.getElementById('player-select').value;
+    fetchAndDisplayDecks(selectedPlayer);
 }
 
-function create_new_player() {
-    name_modal.style.display = 'block';
+function createNewPlayer() {
+    elements.nameModal.style.display = 'block';
 }
 
-function close_modal() {
-    name_modal.style.display = 'none';
+function closeModal() {
+    elements.nameModal.style.display = 'none';
 }
 
-async function submit_name() {
-    const player_name = document.getElementById('player-name-modal').value;
-    if (player_name && !player_names.includes(player_name)) {
-        const response = await fetch(`http://localhost:5000/create_player/${player_name}`);
-        const result = await response.json();
-        if (result.message === "ok") {
-            console.log('Created player successfully');
-            player_names.push(player_name);
-            const option = document.createElement('option');
-            option.value = player_name;
-            option.textContent = player_name;
-            player_selector_1.appendChild(option.cloneNode(true));
-            player_selector_2.appendChild(option.cloneNode(true));
-            player_selector_3.appendChild(option.cloneNode(true));
-            player_selector_4.appendChild(option.cloneNode(true));
-            player_selector_5.appendChild(option.cloneNode(true));
-            player_selector_6.appendChild(option.cloneNode(true));
-        } else {
+async function submitName() {
+    const playerName = document.getElementById('player-name-modal').value;
+    if (playerName && !playerNames.includes(playerName)) {
+        try {
+            const response = await fetch(`http://localhost:5000/create_player/${playerName}`);
+            const result = await response.json();
+            if (result.message === "ok") {
+                console.log('Created player successfully');
+                playerNames.push(playerName);
+                const option = new Option(playerName, playerName);
+                elements.playerSelectors.forEach(selector => selector.appendChild(option.cloneNode(true)));
+            } else {
+                alert('Error creating new player');
+            }
+            closeModal();
+        } catch (error) {
             alert('Error creating new player');
+            console.error("Error:", error);
         }
-        close_modal();
     } else {
         alert('Please enter valid player name.');
     }
-    document.getElementById('player-name-modal').value = ""
+    document.getElementById('player-name-modal').value = "";
 }
 
-function create_new_deck() {
+function createNewDeck() {
     const playerSelect = document.getElementById('player-select-modal');
     playerSelect.innerHTML = '';
-
-    player_names.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        playerSelect.appendChild(option);
-    });
-
+    playerNames.forEach(name => playerSelect.appendChild(new Option(name, name)));
     document.getElementById('deck-modal').style.display = 'block';
 }
 
-function close_deck_modal() {
+function closeDeckModal() {
     document.getElementById('deck-modal').style.display = 'none';
 }
 
-async function submit_deck() {
-    const deck_name = document.getElementById('deck-name-modal').value;
-    const player_name = document.getElementById('player-select-modal').value;
+async function submitDeck() {
+    const deckName = document.getElementById('deck-name-modal').value;
+    const playerName = document.getElementById('player-select-modal').value;
 
-    if (deck_name && player_name) {
+    if (deckName && playerName) {
         try {
-            const response = await fetch(`http://localhost:5000/create_deck/${player_name}/${deck_name}`);
+            const response = await fetch(`http://localhost:5000/create_deck/${playerName}/${deckName}`);
             const result = await response.json();
             if (result.message === "ok") {
                 console.log('Deck created successfully');
             } else {
                 alert('Error creating deck');
             }
-            close_deck_modal();
+            closeDeckModal();
         } catch (error) {
             alert('Error creating deck');
             console.error("Error:", error);
@@ -358,176 +232,37 @@ async function submit_deck() {
     } else {
         alert('Please enter a deck name and select a player.');
     }
-    document.getElementById('deck-name-modal').value = ""
+    document.getElementById('deck-name-modal').value = "";
 }
 
-async function get_player1_decks() {
-    const player_name = player_selector_1.value;
+async function getPlayerDecks(playerIndex) {
+    const playerName = elements.playerSelectors[playerIndex].value;
     try {
-        const response = await fetch(`http://localhost:5000/get_player_decks/${player_name}`);
+        const response = await fetch(`http://localhost:5000/get_player_decks/${playerName}`);
         const result = await response.json();
-
-        deck_selector_1.innerHTML = '';
-        const empty_option = document.createElement('option');
-        empty_option.value = "-";
-        empty_option.textContent = "";
-        deck_selector_1.appendChild(empty_option);
-
-        result.forEach(deck => {
-            const option = document.createElement('option');
-            option.value = deck.deck_name;
-            option.textContent = deck.deck_name;
-            deck_selector_1.appendChild(option);
-        });
+        const deckSelector = elements.deckSelectors[playerIndex];
+        deckSelector.innerHTML = '<option value="-"></option>';
+        result.forEach(deck => deckSelector.appendChild(new Option(deck.deck_name, deck.deck_name)));
     } catch (error) {
         console.error("Error fetching deck data: ", error);
     }
 }
 
-async function get_player2_decks() {
-    const player_name = player_selector_2.value;
-    try {
-        const response = await fetch(`http://localhost:5000/get_player_decks/${player_name}`);
-        const result = await response.json();
-
-        deck_selector_2.innerHTML = '';
-        const empty_option = document.createElement('option');
-        empty_option.value = "-";
-        empty_option.textContent = "";
-        deck_selector_2.appendChild(empty_option);
-
-        result.forEach(deck => {
-            const option = document.createElement('option');
-            option.value = deck.deck_name;
-            option.textContent = deck.deck_name;
-            deck_selector_2.appendChild(option);
-        });
-    } catch (error) {
-        console.error("Error fetching deck data: ", error);
-    }
-}
-
-async function get_player3_decks() {
-    const player_name = player_selector_3.value;
-    try {
-        const response = await fetch(`http://localhost:5000/get_player_decks/${player_name}`);
-        const result = await response.json();
-
-        deck_selector_3.innerHTML = '';
-        const empty_option = document.createElement('option');
-        empty_option.value = "-";
-        empty_option.textContent = "";
-        deck_selector_3.appendChild(empty_option);
-
-        result.forEach(deck => {
-            const option = document.createElement('option');
-            option.value = deck.deck_name;
-            option.textContent = deck.deck_name;
-            deck_selector_3.appendChild(option);
-        });
-    } catch (error) {
-        console.error("Error fetching deck data: ", error);
-    }
-}
-
-async function get_player4_decks() {
-    const player_name = player_selector_4.value;
-    try {
-        const response = await fetch(`http://localhost:5000/get_player_decks/${player_name}`);
-        const result = await response.json();
-
-        deck_selector_4.innerHTML = '';
-        const empty_option = document.createElement('option');
-        empty_option.value = "-";
-        empty_option.textContent = "";
-        deck_selector_4.appendChild(empty_option);
-
-        result.forEach(deck => {
-            const option = document.createElement('option');
-            option.value = deck.deck_name;
-            option.textContent = deck.deck_name;
-            deck_selector_4.appendChild(option);
-        });
-    } catch (error) {
-        console.error("Error fetching deck data: ", error);
-    }
-}
-
-async function get_player5_decks() {
-    const player_name = player_selector_5.value;
-    try {
-        const response = await fetch(`http://localhost:5000/get_player_decks/${player_name}`);
-        const result = await response.json();
-
-        deck_selector_5.innerHTML = '';
-        const empty_option = document.createElement('option');
-        empty_option.value = "-";
-        empty_option.textContent = "";
-        deck_selector_5.appendChild(empty_option);
-
-        result.forEach(deck => {
-            const option = document.createElement('option');
-            option.value = deck.deck_name;
-            option.textContent = deck.deck_name;
-            deck_selector_5.appendChild(option);
-        });
-    } catch (error) {
-        console.error("Error fetching deck data: ", error);
-    }
-}
-
-async function get_player6_decks() {
-    const player_name = player_selector_6.value;
-    try {
-        const response = await fetch(`http://localhost:5000/get_player_decks/${player_name}`);
-        const result = await response.json();
-
-        deck_selector_6.innerHTML = '';
-        const empty_option = document.createElement('option');
-        empty_option.value = "-";
-        empty_option.textContent = "";
-        deck_selector_6.appendChild(empty_option);
-
-        result.forEach(deck => {
-            const option = document.createElement('option');
-            option.value = deck.deck_name;
-            option.textContent = deck.deck_name;
-            deck_selector_6.appendChild(option);
-        });
-    } catch (error) {
-        console.error("Error fetching deck data: ", error);
-    }
-}
-
-async function submit_new_game() {
+async function submitNewGame() {
     document.getElementById('loading').style.display = 'block';
 
-    const winner_name = player_selector_1.value;
-    const winner_deck = deck_selector_1.value;
-    const second_name = player_selector_2.value;
-    const second_deck = deck_selector_2.value;
-    const third_name = player_selector_3.value;
-    const third_deck = deck_selector_3.value;
-    const fourth_name = player_selector_4.value;
-    const fourth_deck = deck_selector_4.value;
-    const fifth_name = player_selector_5.value;
-    const fifth_deck = deck_selector_5.value;
-    const sixth_name = player_selector_6.value;
-    const sixth_deck = deck_selector_6.value;
-
-    const losers = [
-        {name: second_name, deck: second_deck},
-        {name: third_name, deck: third_deck},
-        {name: fourth_name, deck: fourth_deck},
-        {name: fifth_name, deck: fifth_deck},
-        {name: sixth_name, deck: sixth_deck}
-    ];
+    const winnerName = elements.playerSelectors[0].value;
+    const winnerDeck = elements.deckSelectors[0].value;
+    const losers = elements.playerSelectors.slice(1).map((selector, i) => ({
+        name: selector.value,
+        deck: elements.deckSelectors[i + 1].value
+    }));
 
     try {
-        const response = await fetch(`http://localhost:5000/create_match/${winner_name}/${winner_deck}/${second_name}/${second_deck}/${third_name}/${third_deck}/${fourth_name}/${fourth_deck}/${fifth_name}/${fifth_deck}/${sixth_name}/${sixth_deck}`);
+        const response = await fetch(`http://localhost:5000/create_match/${winnerName}/${winnerDeck}/${losers.map(l => `${l.name}/${l.deck}`).join('/')}`);
         const result = await response.json();
         if (result.message === "ok") {
-            console.log('match created successfully');
+            console.log('Match created successfully');
             resetSelectFields();
         } else {
             alert('Error creating match');
@@ -539,10 +274,10 @@ async function submit_new_game() {
     }
 
     try {
-        const response = await fetch(`http://localhost:5000/update_winner/${winner_name}/${winner_deck}`);
+        const response = await fetch(`http://localhost:5000/update_winner/${winnerName}/${winnerDeck}`);
         const result = await response.json();
         if (result.message === "ok") {
-            console.log('winner updated successfully');
+            console.log('Winner updated successfully');
         } else {
             alert('Error updating winner');
             console.log(result);
@@ -558,7 +293,7 @@ async function submit_new_game() {
                 const response = await fetch(`http://localhost:5000/update_loser/${loser.name}/${loser.deck}`);
                 const result = await response.json();
                 if (result.message === "ok") {
-                    console.log('loser updated successfully');
+                    console.log('Loser updated successfully');
                 } else {
                     alert('Error updating loser');
                     console.log(result);
@@ -569,17 +304,17 @@ async function submit_new_game() {
             }
         }
     }
-    await set_best_decks()
-    to_menu();
+    await setBestDecks();
+    toMenu();
     document.getElementById('loading').style.display = 'none';
 }
 
-async function set_best_decks() {
+async function setBestDecks() {
     try {
         const response = await fetch(`http://localhost:5000/set_best_decks`);
         const result = await response.json();
         if (result.message === "ok") {
-            console.log("best decks updated");
+            console.log("Best decks updated");
         } else {
             alert('Error updating best decks');
             console.log(result);
@@ -591,34 +326,14 @@ async function set_best_decks() {
 }
 
 function resetSelectFields() {
-    const selectors = [
-        player_selector_1, deck_selector_1,
-        player_selector_2, deck_selector_2,
-        player_selector_3, deck_selector_3,
-        player_selector_4, deck_selector_4,
-        player_selector_5, deck_selector_5,
-        player_selector_6, deck_selector_6
-    ];
-    selectors.forEach(selector => {
-        selector.value = '-';
-    });
+    elements.playerSelectors.concat(elements.deckSelectors).forEach(selector => selector.value = '-');
 }
 
-function hide_main_menu() {
-    main_menu.style.display = "none";
+function toMenu() {
+    hideAllMenus();
+    elements.mainMenu.style.display = "flex";
 }
 
-function to_menu() {
-    main_menu.style.display = "flex";
-    for (let i of not_main_menu) {
-        i.style.display = "none";
-    }
-}
-
-function calculate_win_rate(games, wins) {
-    if (games === 0) {
-        return "0.00%";
-    }
-    const win_rate = (wins / games) * 100;
-    return win_rate.toFixed(2) + "%";
+function calculateWinRate(games, wins) {
+    return games === 0 ? "0.00%" : ((wins / games) * 100).toFixed(2) + "%";
 }

@@ -2,38 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=yes, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Mätäng emännys</title>
     <link rel="stylesheet" href="/static/stylesheet.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="/static/menu.js" defer></script>
 </head>
 <body>
 
-<div id="connection"></div>
+<!-- Navigation Bar -->
+<nav class="navbar">
+    <ul>
+        <li><a href="#" onclick="showCreateNewGame()"><i class="fas fa-plus-circle"></i></a></li>
+        <li><a href="#" onclick="showHistory()"><i class="fas fa-history"></i></a></li>
+        <li><a href="#" onclick="showViewGameData()"><i class="fas fa-table"></i></a></li>
+        <li><a href="#" onclick="showDeckData()"><i class="fa-solid fa-layer-group"></i></a></li>
+    </ul>
+</nav>
 
 <div id="main-menu" class="menu-container">
-    <h1>Mätäng emännys</h1>
-    <div class="menu-options">
-        <button onclick="show_create_new_game()">New Game</button>
-        <button onclick="show_history()">History</button>
-        <button onclick="show_view_game_data()">Scoreboard</button>
-        <button onclick="show_deck_data()">Decks</button>
-    </div>
+    <h1>Welcome to Mätäng emännys!</h1>
+    <p>You are:</p>
+    <div id="connection"></div>
 </div>
 
 <div id="player-amount" class="menu-container not-main" style="display: none">
     <h1>Create new game</h1>
     <div class="player-options">
-        <button onclick="create_new_player()">Create new player</button>
-        <button onclick="create_new_deck()">Create new deck</button>
+        <button onclick="createNewPlayer()">Create new player</button>
+        <button onclick="createNewDeck()">Create new deck</button>
     </div>
 
     <div id="player-selector">
         <div class="player-select">
             <label for="player-select-1">#1</label>
-            <select id="player-select-1" onchange="get_player1_decks()">
+            <select id="player-select-1" onchange="getPlayerDecks(0)">
                 <option value="-"></option>
                 <!-- Player options will be populated by JavaScript -->
             </select>
@@ -46,7 +50,7 @@
         </div>
         <div class="player-select">
             <label for="player-select-2">#2</label>
-            <select id="player-select-2" onchange="get_player2_decks()">
+            <select id="player-select-2" onchange="getPlayerDecks(1)">
                 <option value="-"></option>
                 <!-- Player options will be populated by JavaScript -->
             </select>
@@ -59,7 +63,7 @@
         </div>
         <div class="player-select">
             <label for="player-select-3">#3</label>
-            <select id="player-select-3" onchange="get_player3_decks()">
+            <select id="player-select-3" onchange="getPlayerDecks(2)">
                 <option value="-"></option>
                 <!-- Player options will be populated by JavaScript -->
             </select>
@@ -72,7 +76,7 @@
         </div>
         <div class="player-select">
             <label for="player-select-4">#4</label>
-            <select id="player-select-4" onchange="get_player4_decks()">
+            <select id="player-select-4" onchange="getPlayerDecks(3)">
                 <option value="-"></option>
                 <!-- Player options will be populated by JavaScript -->
             </select>
@@ -85,7 +89,7 @@
         </div>
         <div class="player-select">
             <label for="player-select-5">#5</label>
-            <select id="player-select-5" onchange="get_player5_decks()">
+            <select id="player-select-5" onchange="getPlayerDecks(4)">
                 <option value="-"></option>
                 <!-- Player options will be populated by JavaScript -->
             </select>
@@ -95,9 +99,10 @@
                 <option value="-"></option>
                 <!-- Deck options will be populated by JavaScript -->
             </select>
-        </div><div class="player-select">
+        </div>
+        <div class="player-select">
             <label for="player-select-6">#6</label>
-            <select id="player-select-6" onchange="get_player6_decks()">
+            <select id="player-select-6" onchange="getPlayerDecks(5)">
                 <option value="-"></option>
                 <!-- Player options will be populated by JavaScript -->
             </select>
@@ -110,23 +115,22 @@
         </div>
 
     </div>
-    <button onclick="submit_new_game()">Submit</button>
-    <button class="back-button" onclick="to_menu()">Back to menu</button>
+    <button onclick="submitNewGame()">Submit</button>
 </div>
 
 
 <div id="name-modal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="close_modal()">&times;</span>
+        <span class="close" onclick="closeModal()">&times;</span>
         <h2>Enter Player Name</h2>
         <input type="text" id="player-name-modal" placeholder="Player name">
-        <button onclick="submit_name()">Submit</button>
+        <button onclick="submitName()">Submit</button>
     </div>
 </div>
 
 <div id="deck-modal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="close_deck_modal()">&times;</span>
+        <span class="close" onclick="closeDeckModal()">&times;</span>
         <h2>Create New Deck</h2>
         <label for="deck-name-modal">Deck Name</label>
         <input type="text" id="deck-name-modal" placeholder="Deck name">
@@ -135,19 +139,19 @@
         <select id="player-select-modal">
             <!-- Options will be populated by JavaScript -->
         </select>
-        <button onclick="submit_deck()">Submit</button>
+        <button onclick="submitDeck()">Submit</button>
     </div>
 </div>
 
-<div id="player-data" class="player-container not-main" style="display: none">
+<div id="player-data" class="menu-container not-main" style="display: none">
     <h1>Scoreboard</h1>
-    <table id="player-table" class="data-table">
+    <table id="player-table" class="narrow-data-table">
         <thead>
         <tr>
             <th>Name</th>
             <th>Games</th>
             <th>Wins</th>
-            <th>Winrate</th>
+            <th>Win%</th>
             <th>#1 Deck</th>
         </tr>
         </thead>
@@ -155,10 +159,9 @@
         <!-- Rows will be inserted here by JavaScript -->
         </tbody>
     </table>
-    <button class="back-button" onclick="to_menu()">Back to menu</button>
 </div>
 
-<div id="player-history" class="player-container not-main" style="display: none">
+<div id="player-history" class="menu-container not-main" style="display: none">
     <h1>Match History</h1>
     <table id="history-table" class="data-table">
         <thead>
@@ -176,10 +179,9 @@
         <!-- Match history will be inserted here by JavaScript -->
         </tbody>
     </table>
-    <button class="back-button" onclick="to_menu()">Back to menu</button>
 </div>
 
-<div id="match-history" class="player-container not-main" style="display: none">
+<div id="match-history" class="menu-container not-main" style="display: none">
     <h1>Match History</h1>
     <table id="match-table" class="data-table">
         <thead>
@@ -197,30 +199,28 @@
         <!-- Match history will be inserted here by JavaScript -->
         </tbody>
     </table>
-    <button class="back-button" onclick="to_menu()">Back to menu</button>
 </div>
 
-<div id="deck-data" class="player-container not-main" style="display: none">
+<div id="deck-data" class="menu-container not-main" style="display: none">
     <h1>Decks</h1>
     <label for="player-select">Filter by player:</label>
-    <select id="player-select" onchange="filter_decks_by_player()">
+    <select id="player-select" onchange="filterDecksByPlayer()">
         <option value="all">All Players</option>
     </select>
-    <table id="deck-table" class="data-table">
+    <table id="deck-table" class="narrow-data-table">
         <thead>
         <tr>
             <th>Deck</th>
-            <th>Creator</th>
+            <th>Owner</th>
             <th>Games</th>
             <th>Wins</th>
-            <th>Winrate</th>
+            <th>Win%</th>
         </tr>
         </thead>
         <tbody>
         <!-- Rows will be inserted here by JavaScript -->
         </tbody>
     </table>
-    <button class="back-button" onclick="to_menu()">Back to menu</button>
 </div>
 
 <div id="loading" style="display:none;">Loading...</div>
