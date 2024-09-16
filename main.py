@@ -8,10 +8,10 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-tietokanta = {'user': 'root',
-              'password': 'Bumbaz9',
-              'host': '127.0.0.1',
-              'database': 'mtg_database',
+tietokanta = {'user': '***',
+              'password': '***',
+              'host': '***',
+              'database': '***',
               'raise_on_warnings': True,
               'autocommit': True}
 
