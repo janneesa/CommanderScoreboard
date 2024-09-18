@@ -25,7 +25,7 @@ Users can also see their personal match history and the winrates of their oppone
 <img width="300" alt="sc1" src="https://github.com/user-attachments/assets/760d847c-a2dd-4686-aa39-f73ef840b62d">
 <img width="220" alt="sc5" src="https://github.com/user-attachments/assets/b3c88b2c-d6c1-40b7-a977-c0b1222d4dc3">
 <img width="300" alt="sc2" src="https://github.com/user-attachments/assets/4edc3142-25c9-48b4-8ed5-1deef06b4971">
-<img width="300" alt="sc6" src="https://github.com/user-attachments/assets/aef5b036-bb8c-4654-979f-df192ee61874">
+<img width="450" alt="sc6" src="https://github.com/user-attachments/assets/aef5b036-bb8c-4654-979f-df192ee61874">
 <img width="300" alt="sc3" src="https://github.com/user-attachments/assets/71bcb8f4-04fe-4693-a941-8f5e6fdbc0cc">
 <img width="300" alt="sc4" src="https://github.com/user-attachments/assets/ba091590-05bd-4789-8d9d-ae2551185e55">
 
